@@ -8,25 +8,29 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
-  --primary: #1a56db;
-  --primary-light: #1e67f5;
-  --accent: #2563eb;
-  --accent-light: #3b82f6;
-  --gold: #d97706;
-  --gold-light: #f59e0b;
-  --bg: #f8fafc;
+  --primary: #1B2A4A;
+  --primary-light: #243660;
+  --accent: #C9A84C;
+  --accent-light: #B8922A;
+  --gold: #C9A84C;
+  --gold-light: #B8922A;
+  --bg: #F5F3EE;
   --bg-card: #ffffff;
-  --bg-card2: #f1f5f9;
-  --text: #1e293b;
-  --text-muted: #64748b;
-  --border: rgba(37,99,235,0.15);
-  --center-bg: #fefce8;
-  --center-border: #d97706;
-  --layer1-bg: #eff6ff;
-  --layer1-border: #3b82f6;
-  --layer2-bg: #f8fafc;
-  --success: #059669;
-  --danger: #dc2626;
+  --bg-card2: #EDE9DF;
+  --text: #1B2A4A;
+  --text-muted: #5A6478;
+  --border: rgba(27,42,74,0.15);
+  --center-bg: #FFFBF0;
+  --center-border: #C9A84C;
+  --layer1-bg: #EBF0FA;
+  --layer1-border: #1B2A4A;
+  --layer2-bg: #FAFAF8;
+  --layer2-text: #1B2A4A;
+  --outer-center-bg: #F0F7F0;
+  --outer-center-border: #2E7D52;
+  --outer-center-text: #1A5C35;
+  --success: #2E7D52;
+  --danger: #C0392B;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -47,8 +51,8 @@ body::before {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(ellipse at 30% 20%, rgba(124,92,191,0.08) 0%, transparent 50%),
-              radial-gradient(ellipse at 70% 80%, rgba(201,168,76,0.05) 0%, transparent 50%);
+  background: radial-gradient(ellipse at 20% 10%, rgba(27,42,74,0.04) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 90%, rgba(201,168,76,0.04) 0%, transparent 50%);
   pointer-events: none;
   z-index: 0;
 }
@@ -66,12 +70,14 @@ body::before {
 
 .login-card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
+  border: 1px solid #D4C9A8;
+  border-top: 4px solid #C9A84C;
   border-radius: 24px;
   padding: 3rem;
   width: 100%;
   max-width: 420px;
   text-align: center;
+  box-shadow: 0 8px 40px rgba(27,42,74,0.12);
 }
 
 .login-logo {
@@ -182,9 +188,8 @@ body::before {
   align-items: center;
   justify-content: space-between;
   padding: 1rem 2rem;
-  background: rgba(15,10,30,0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+  background: #1B2A4A;
+  border-bottom: 2px solid #C9A84C;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -193,7 +198,7 @@ body::before {
 .header-logo {
   font-family: 'Shippori Mincho', serif;
   font-size: 16px;
-  color: var(--gold);
+  color: #C9A84C;
   letter-spacing: 0.1em;
 }
 
@@ -207,15 +212,15 @@ body::before {
   border-radius: 8px;
   border: 1px solid transparent;
   background: transparent;
-  color: var(--text-muted);
+  color: rgba(255,255,255,0.7);
   font-size: 13px;
   font-family: 'Noto Sans JP', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.nav-btn:hover { color: var(--text); background: rgba(124,92,191,0.1); }
-.nav-btn.active { color: var(--text); background: rgba(124,92,191,0.2); border-color: var(--border); }
+.nav-btn:hover { color: #ffffff; background: rgba(255,255,255,0.1); }
+.nav-btn.active { color: #1B2A4A; background: #C9A84C; border-color: #C9A84C; font-weight: 700; }
 
 .header-user {
   display: flex;
@@ -225,21 +230,21 @@ body::before {
 
 .user-name {
   font-size: 13px;
-  color: var(--text-muted);
+  color: rgba(255,255,255,0.7);
 }
 
 .btn-logout {
   padding: 6px 14px;
   border-radius: 8px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255,255,255,0.3);
   background: transparent;
-  color: var(--text-muted);
+  color: rgba(255,255,255,0.7);
   font-size: 12px;
   font-family: 'Noto Sans JP', sans-serif;
   cursor: pointer;
   transition: all 0.2s;
 }
-.btn-logout:hover { color: var(--text); border-color: var(--accent); }
+.btn-logout:hover { color: #ffffff; border-color: #C9A84C; }
 
 /* ===== セクション ===== */
 .section { display: none; padding: 2rem; max-width: 1200px; margin: 0 auto; }
@@ -322,8 +327,8 @@ body::before {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   gap: 3px;
-  background: rgba(124,92,191,0.15);
-  border: 2px solid rgba(124,92,191,0.3);
+  background: #1B2A4A;
+  border: 3px solid #1B2A4A;
   border-radius: 16px;
   padding: 3px;
 }
@@ -337,50 +342,52 @@ body::before {
   font-size: 11px;
   line-height: 1.4;
   padding: 6px 4px;
-  border-radius: 6px;
+  border-radius: 5px;
   cursor: pointer;
   transition: all 0.15s;
   word-break: break-all;
   background: var(--layer2-bg);
-  border: 1px solid rgba(124,92,191,0.1);
-  color: var(--text-muted);
+  border: 1px solid #D8D0C0;
+  color: var(--layer2-text);
   position: relative;
 }
 
 .masu-cell:hover {
-  border-color: var(--accent);
-  background: var(--bg-card2);
-  color: var(--text);
+  border-color: #C9A84C;
+  background: #FFFBF0;
+  color: #1B2A4A;
   z-index: 2;
   transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(201,168,76,0.3);
 }
 
 /* ブロック間の太い区切り */
-.masu-cell.block-border-right { border-right: 2px solid rgba(124,92,191,0.4) !important; }
-.masu-cell.block-border-bottom { border-bottom: 2px solid rgba(124,92,191,0.4) !important; }
+.masu-cell.block-border-right { border-right: 2px solid #1B2A4A !important; }
+.masu-cell.block-border-bottom { border-bottom: 2px solid #1B2A4A !important; }
 
 /* 中央マス（目標） */
 .masu-cell.is-center {
   background: var(--center-bg);
   border: 2px solid var(--center-border) !important;
-  color: var(--gold-light);
+  color: #7A5C00;
   font-weight: 700;
   font-size: 12px;
+  box-shadow: inset 0 0 0 1px rgba(201,168,76,0.3);
 }
 
 /* 第1層（中央ブロックの周囲8マス） */
 .masu-cell.is-layer1 {
-  background: var(--layer1-bg);
-  border: 1px solid rgba(124,92,191,0.35);
-  color: var(--accent-light);
-  font-weight: 500;
+  background: #EBF0FA;
+  border: 1px solid #1B2A4A !important;
+  color: #1B2A4A;
+  font-weight: 600;
 }
 
 /* 外側ブロックの中央（第1層の転記） */
 .masu-cell.is-outer-center {
-  background: rgba(76,175,130,0.12);
-  border: 1px solid rgba(76,175,130,0.3) !important;
-  color: #80C8A8;
+  background: var(--outer-center-bg);
+  border: 2px solid var(--outer-center-border) !important;
+  color: var(--outer-center-text);
   font-weight: 700;
 }
 
@@ -429,8 +436,10 @@ body::before {
 .chat-title {
   font-size: 14px;
   font-weight: 500;
-  color: var(--accent-light);
+  color: #1B2A4A;
   margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #D4C9A8;
 }
 
 .chat-input-row {
@@ -457,17 +466,17 @@ body::before {
 }
 
 .chat-msg.question {
-  background: rgba(124,92,191,0.15);
-  border: 1px solid rgba(124,92,191,0.2);
-  color: var(--accent-light);
+  background: #EBF0FA;
+  border: 1px solid #1B2A4A;
+  color: #1B2A4A;
   align-self: flex-end;
   max-width: 80%;
 }
 
 .chat-msg.answer {
-  background: rgba(76,175,130,0.1);
-  border: 1px solid rgba(76,175,130,0.2);
-  color: var(--text);
+  background: #F0F7F0;
+  border: 1px solid #2E7D52;
+  color: #1B2A4A;
   align-self: flex-start;
   max-width: 90%;
 }
@@ -584,12 +593,12 @@ body::before {
 
 .plan-card-title {
   font-size: 13px;
-  font-weight: 500;
-  color: var(--gold);
+  font-weight: 700;
+  color: #1B2A4A;
   letter-spacing: 0.08em;
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid #C9A84C;
 }
 
 .plan-field {
@@ -672,9 +681,9 @@ body::before {
 }
 
 .toast.show { transform: translateY(0); opacity: 1; }
-.toast.info { background: rgba(74,48,128,0.95); border: 1px solid var(--accent); }
-.toast.success { background: rgba(76,175,130,0.95); }
-.toast.error { background: rgba(224,85,85,0.95); }
+.toast.info { background: #1B2A4A; border: 1px solid #C9A84C; }
+.toast.success { background: #1A5C35; }
+.toast.error { background: #C0392B; }
 
 /* ===== ローディング ===== */
 .loading {
@@ -1195,7 +1204,7 @@ async function generateLayer1() {
   setCell(4, 4, goal);
 
   const memo = document.getElementById('memo-input').value;
-  const prompt = `あなたは一流の経営コンサルタントです。
+  const prompt = `あなたは年商10億円以上の経営者を顧問する一流の経営コンサルタントです。
 以下の経営者の目標に対して、AI9マス思考法の中央ブロック周囲8マスを生成してください。
 
 会社名：${userSettings.company || '未設定'}
@@ -1203,12 +1212,14 @@ async function generateLayer1() {
 経営者の目標（中央）：${goal}
 補足情報：${memo || 'なし'}
 
-【重要な条件】
-- 目標達成のために絶対に必要な8つの要素を選んでください
-- 経営者が見落としがちな重要事項も必ず含めてください
-- 各要素は12文字以内の簡潔なキーワード
+【厳守条件】
+- 目標達成のために絶対に必要な8つの戦略要素を選ぶ
+- 各要素は必ず「数値」または「具体的な手段」を含む20文字以内の表現にする
+- 例：「顧客獲得」ではなく「月30件新規獲得」、「売上向上」ではなく「単価40万円設計」
+- 経営者が即座に行動できるレベルの具体性にすること
+- 抽象的なキーワードは絶対に使わない（「強化」「改善」「推進」のみの表現は禁止）
 - 時計回りで重要な順：上中が最重要、右上が2番目、右中が3番目、右下が4番目、下中が5番目、左下が6番目、左中が7番目、左上が8番目
-- 戦略・財務・人材・マーケ・オペレーション・IT・顧客・組織などの視点を意識
+- 戦略・財務・集客・商品・人材・IT活用・顧客維持・組織の8視点を網羅
 
 【出力形式】厳守：縦棒区切りで8つのキーワードのみ。余計な説明は一切不要。
 上中|右上|右中|右下|下中|左下|左中|左上`;
@@ -1252,20 +1263,22 @@ async function generateLayer2() {
   btn.disabled = true;
   btn.innerHTML = '<span class="loading"></span>生成中（20〜40秒）...';
 
-  const prompt = `あなたは一流の経営コンサルタントです。
+  const prompt = `あなたは年商10億円以上の経営者を顧問する一流の経営コンサルタントです。
 AI9マス思考法の外側8ブロック（各8マス）の具体的行動を生成してください。
 
 会社名：${userSettings.company || '未設定'}　業種：${userSettings.industry || '未設定'}
 最終目標：${goal}
 
-8つの要素（時計回りで重要な順）：
+8つの戦略要素（時計回りで重要な順）：
 ${elements.map((e,i) => `要素${i+1}：${e}`).join('\n')}
 
-【条件】
-- 各要素について、それを達成するための具体的な行動・施策・手段を8つ生成
-- 各行動は15文字以内
-- 実際に実行可能な具体的内容
-- 中小企業（従業員5〜30名）が実行できる現実的な内容
+【厳守条件】
+- 各要素について、それを実現するための具体的な行動・施策を8つ生成
+- 各行動は必ず「数値」「頻度」「ツール名」「担当者」のいずれかを含む20文字以内
+- 例：「集客する」ではなく「X毎日投稿でフォロワー月300増」
+- 例：「売上管理」ではなく「Googleシートで週次売上レビュー」
+- 抽象的な表現禁止：「強化」「推進」「改善」のみの表現は使わない
+- 中小企業（従業員5〜30名）が今すぐ実行できる具体的内容
 - 時計回りで重要な順：上中が最重要
 
 【出力形式】厳守：
@@ -1273,7 +1286,7 @@ ${elements.map((e,i) => `要素${i+1}：${e}`).join('\n')}
 ---
 要素2：上中|右上|右中|右下|下中|左下|左中|左上
 ---
-（8要素分繰り返す。「---」で区切る。「要素N：」のプレフィックスの後に8つ。余計な説明不要）`;
+（8要素分繰り返す。「---」で区切る。「要素N：」の後に8つ。余計な説明不要）`;
 
   try {
     const result = await callGemini(prompt);
@@ -1312,18 +1325,20 @@ async function sendChat() {
   addChatMsg(q, 'question');
   document.getElementById('chat-input').value = '';
 
-  const prompt = `あなたは経営コンサルタントです。以下の情報をもとに経営者の質問に回答してください。
+  const prompt = `あなたは年商10億円以上の経営者を顧問する一流の経営コンサルタントです。以下の情報をもとに経営者の質問に回答してください。
 
 会社名：${userSettings.company || '未設定'}　業種：${userSettings.industry || '未設定'}
 目標：${goal}
-9マスの要素（重要な順）：${elements.join('、')}
+9マスの戦略要素（重要な順）：${elements.join('、')}
 
 経営者の質問：${q}
 
 【回答条件】
-- 具体的で実践的なアドバイスを400字以内で
-- 必要であれば9マスの修正提案も含める
-- 中小企業経営者にわかりやすい言葉で`;
+- 経営判断ができるレベルの具体的アドバイスを500字以内で
+- 必ず数値・期限・具体的な手段を含める
+- 「〜すべきです」ではなく「〜してください。理由は〜だからです。具体的には〜」の形式
+- 9マスの修正が必要な場合は「【修正提案】マス名：現状→推奨」の形式で明示
+- 代替案・リスクも必ず1つずつ提示する`;
 
   try {
     const answer = await callGemini(prompt);
@@ -1386,19 +1401,25 @@ async function generatePlan() {
 
   showToast('AIが事業計画書を生成中...', 'info');
 
-  const prompt = `あなたは一流の経営コンサルタントです。以下の情報から事業計画書・KGI・KPIを作成してください。
+  const prompt = `あなたは年商10億円以上の経営者を顧問する一流の経営コンサルタントです。以下の情報から、投資家・金融機関に提出できるレベルの事業計画書・KGI・KPIを作成してください。
 
 会社名：${userSettings.company || '未設定'}　業種：${userSettings.industry || '未設定'}
 最終目標：${goal}
-9マスの要素（重要な順）：${elements.join('、')}
+9マスの戦略要素（重要な順）：${elements.join('、')}
+
+【厳守条件】
+- 全ての数値は具体的な根拠ある数字を使う（「増加」ではなく「月15%増」）
+- KGIは年間・半年・四半期の3段階で設定
+- KPIは週次・月次・四半期に分けて設定し、必ず担当役職を明記
+- 戦略は「誰が・何を・いつまでに・どのくらい」の形式で記述
 
 【出力形式】厳守
 
 =VISION=
-（ビジョンを2文で。具体的・鼓舞的な表現で）
+（3年後の具体的な姿を2文で。数値を必ず含める）
 
 =STRATEGIES=
-戦略1：（要素を具体的な経営戦略に変換）
+戦略1：（9マスの要素を「誰が・何を・いつまでに・数値目標」の形式で記述）
 戦略2：
 戦略3：
 戦略4：
@@ -1408,19 +1429,19 @@ async function generatePlan() {
 戦略8：
 
 =KGI=
-（KGI項目名）|（具体的な目標数値）|（達成期限）
-（KGI項目名）|（具体的な目標数値）|（達成期限）
-（KGI項目名）|（具体的な目標数値）|（達成期限）
+（KGI項目名）|（具体的な目標数値・単位付き）|（達成期限）
+（KGI項目名）|（具体的な目標数値・単位付き）|（達成期限）
+（KGI項目名）|（具体的な目標数値・単位付き）|（達成期限）
 
 =KPI=
-（KPI項目名）|（目標数値）|（週次/月次/四半期）|（担当者役職）
-（KPI項目名）|（目標数値）|（週次/月次/四半期）|（担当者役職）
-（KPI項目名）|（目標数値）|（週次/月次/四半期）|（担当者役職）
-（KPI項目名）|（目標数値）|（週次/月次/四半期）|（担当者役職）
-（KPI項目名）|（目標数値）|（週次/月次/四半期）|（担当者役職）
-（KPI項目名）|（目標数値）|（週次/月次/四半期）|（担当者役職）
-（KPI項目名）|（目標数値）|（週次/月次/四半期）|（担当者役職）
-（KPI項目名）|（目標数値）|（週次/月次/四半期）|（担当者役職）`;
+（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）
+（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）
+（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）
+（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）
+（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）
+（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）
+（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）
+（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）`;
 
   try {
     const result = await callGemini(prompt);
