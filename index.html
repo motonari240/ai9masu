@@ -369,7 +369,6 @@ body::before {
   border-color: #C9A84C;
   background: #FFFBF0;
   color: #1B2A4A;
-  box-shadow: 0 2px 8px rgba(201,168,76,0.3);
 }
 
 /* ブロック間の区切り */
@@ -769,6 +768,7 @@ body::before {
     <nav class="header-nav">
       <button class="nav-btn active" onclick="showSection('masu')">9マス</button>
       <button class="nav-btn" onclick="showSection('plan')">事業計画書</button>
+      <button class="nav-btn" onclick="showSection('progress')">進捗</button>
       <button class="nav-btn" onclick="showSection('settings')">設定</button>
     </nav>
     <div class="header-user">
@@ -834,6 +834,7 @@ body::before {
     <div style="display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap;">
       <button class="btn-action gold" onclick="generatePlan()">AIで事業計画書を生成</button>
       <button class="btn-action" onclick="exportDoc()">テキストでエクスポート</button>
+      <button class="btn-action" style="border-color:#2E7D52;color:#2E7D52;" onclick="sendKpiToProgress()">KPIをKPI管理画面に取り込む</button>
     </div>
 
     <div class="plan-grid">
@@ -857,6 +858,14 @@ body::before {
         </div>
       </div>
 
+      <!-- 市場分析・競合優位性（経営者が入力） -->
+      <div class="plan-card" style="grid-column:1/-1;">
+        <div class="plan-card-title">市場分析・競合優位性（経営者が記入してください）</div>
+        <textarea id="plan-market" contenteditable="true"
+          placeholder="・市場規模：&#10;・成長率：&#10;・競合他社：&#10;・競合との差別化：&#10;・自社の強み："
+          style="width:100%;min-height:160px;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);background:var(--bg-card2);line-height:1.8;resize:vertical;outline:none;"></textarea>
+      </div>
+
       <div class="plan-card">
         <div class="plan-card-title">戦略・行動計画</div>
         <div id="plan-strategies"></div>
@@ -866,20 +875,22 @@ body::before {
         <div class="plan-card-title">KGI（最終目標指標）</div>
         <table class="kgi-table">
           <thead>
-            <tr><th>KGI項目</th><th>目標値</th><th>期限</th><th>達成率</th></tr>
+            <tr><th>KGI項目</th><th>1年目</th><th>2年目</th><th>3年目</th><th>計測方法</th></tr>
           </thead>
           <tbody id="kgi-tbody"></tbody>
         </table>
       </div>
 
-      <div class="plan-card">
+      <div class="plan-card" style="grid-column:1/-1;">
         <div class="plan-card-title">KPI（中間指標）</div>
-        <table class="kgi-table">
-          <thead>
-            <tr><th>KPI項目</th><th>目標値</th><th>頻度</th><th>担当</th></tr>
-          </thead>
-          <tbody id="kpi-tbody"></tbody>
-        </table>
+        <div style="overflow-x:auto;">
+          <table class="kgi-table">
+            <thead>
+              <tr><th>KPI項目</th><th>目標値</th><th>頻度</th><th>担当</th><th>使用AIツール</th><th>AI活用内容</th></tr>
+            </thead>
+            <tbody id="kpi-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </section>
@@ -888,31 +899,118 @@ body::before {
   <section id="section-settings" class="section">
     <div class="section-header">
       <h2 class="section-title">設定</h2>
-      <p class="section-desc">会社情報とAPIキーを入力してください。</p>
+      <p class="section-desc">会社情報を入力してください。事業計画書の精度が上がります。</p>
     </div>
-    <div class="settings-grid">
-      <div class="form-group">
-        <label class="form-label">会社名</label>
-        <input type="text" id="s-company" class="form-input" placeholder="株式会社〇〇">
+
+    <!-- 基本情報 -->
+    <div style="margin-bottom:2rem;">
+      <h3 style="font-size:14px;font-weight:700;color:#1B2A4A;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:2px solid #C9A84C;">【基本情報】</h3>
+      <div class="settings-grid">
+        <div class="form-group">
+          <label class="form-label">会社名</label>
+          <input type="text" id="s-company" class="form-input" placeholder="株式会社〇〇">
+        </div>
+        <div class="form-group">
+          <label class="form-label">氏名</label>
+          <input type="text" id="s-name" class="form-input" placeholder="山田 太郎">
+        </div>
+        <div class="form-group">
+          <label class="form-label">業種</label>
+          <input type="text" id="s-industry" class="form-input" placeholder="製造業、IT、小売業など">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gemini APIキー</label>
+          <input type="password" id="s-apikey" class="form-input" placeholder="AIzaSy...">
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">氏名</label>
-        <input type="text" id="s-name" class="form-input" placeholder="山田 太郎">
+      <button class="btn-save" onclick="saveSettings()">基本情報を保存</button>
+    </div>
+
+    <!-- 会社の現状 -->
+    <div style="margin-bottom:2rem;padding-top:1.5rem;border-top:1px solid var(--border);">
+      <h3 style="font-size:14px;font-weight:700;color:#1B2A4A;margin-bottom:1rem;padding-bottom:0.5rem;border-bottom:2px solid #C9A84C;">【会社の現状】</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:1rem;">この情報をもとに精度の高い事業計画書を生成します。</p>
+      <div class="settings-grid">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">現在の売上・利益・従業員数</label>
+          <input type="text" id="s-current" class="form-input" placeholder="例：売上1億円、営業利益10%、従業員15名">
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">主力商品・サービスと単価</label>
+          <input type="text" id="s-products" class="form-input" placeholder="例：AI導入コンサル40万円/社、AI講座20万円/人">
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">市場規模・競合・自社の強み</label>
+          <input type="text" id="s-market" class="form-input" placeholder="例：国内AI市場2000億円、競合はA社・B社、自社の強みは現場経験20年">
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">業種</label>
-        <input type="text" id="s-industry" class="form-input" placeholder="製造業、IT、小売業など">
+      <button class="btn-save" onclick="saveExtraSettings()">現状情報を保存</button>
+    </div>
+
+    <!-- KGI設定 -->
+    <div style="padding-top:1.5rem;border-top:1px solid var(--border);">
+      <h3 style="font-size:14px;font-weight:700;color:#1B2A4A;margin-bottom:0.5rem;padding-bottom:0.5rem;border-bottom:2px solid #C9A84C;">【KGI設定】</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:1rem;">あなたが自分で決める最終目標です。AIは使いません。経営者自身が入力してください。</p>
+      <div style="display:flex;flex-direction:column;gap:12px;max-width:680px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
+          <input type="text" id="kgi1-name" class="form-input" placeholder="KGI①項目名（例：年間売上）">
+          <input type="text" id="kgi1-value" class="form-input" placeholder="3年目目標値（例：3億円）">
+          <input type="text" id="kgi1-deadline" class="form-input" placeholder="期限（例：2027年3月）">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
+          <input type="text" id="kgi2-name" class="form-input" placeholder="KGI②項目名（例：新規顧客数）">
+          <input type="text" id="kgi2-value" class="form-input" placeholder="3年目目標値（例：50社）">
+          <input type="text" id="kgi2-deadline" class="form-input" placeholder="期限（例：2027年3月）">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;">
+          <input type="text" id="kgi3-name" class="form-input" placeholder="KGI③項目名（例：営業利益率）">
+          <input type="text" id="kgi3-value" class="form-input" placeholder="3年目目標値（例：15%）">
+          <input type="text" id="kgi3-deadline" class="form-input" placeholder="期限（例：2027年3月）">
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Gemini APIキー</label>
-        <input type="password" id="s-apikey" class="form-input" placeholder="AIzaSy...">
+      <button class="btn-save" style="margin-top:1rem;" onclick="saveKgiSettings()">KGIを保存</button>
+    </div>
+  </section>
+  <!-- 進捗管理セクション -->
+  <section id="section-progress" class="section">
+    <div class="section-header">
+      <h2 class="section-title">KPI進捗管理</h2>
+      <p class="section-desc">毎日の実績を入力して事業計画書と連動した進捗を管理します。AIがKPIの妥当性をチェックします。</p>
+    </div>
+
+    <div id="kpi-progress-list" style="display:flex;flex-direction:column;gap:12px;margin-bottom:2rem;"></div>
+
+    <div id="kpi-ai-area" style="display:none;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;margin-bottom:1.5rem;">
+      <div style="font-size:14px;font-weight:700;color:#1B2A4A;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:2px solid #C9A84C;">AIからの提案</div>
+      <div id="kpi-ai-suggestion" style="font-size:13px;color:var(--text);line-height:1.8;margin-bottom:1rem;white-space:pre-wrap;"></div>
+      <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
+        <button onclick="acceptKpiSuggestion()" style="padding:10px 20px;background:#1B2A4A;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;">この提案でKPIを更新する</button>
+        <button onclick="rejectKpiSuggestion()" style="padding:10px 20px;background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;cursor:pointer;">採用しない</button>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:1rem;">
+        <div style="font-size:12px;font-weight:600;color:#1B2A4A;margin-bottom:8px;">自分の意見をAIと壁打ちする</div>
+        <div id="kpi-chat-messages" style="max-height:200px;overflow-y:auto;margin-bottom:8px;display:flex;flex-direction:column;gap:8px;"></div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="kpi-chat-input" class="form-input" placeholder="例：このKPIは高すぎると思う。理由は〜" onkeydown="if(event.key==='Enter')sendKpiChat()" style="flex:1;font-size:13px;">
+          <button onclick="sendKpiChat()" style="padding:10px 18px;background:#1B2A4A;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer;white-space:nowrap;">送信</button>
+        </div>
+        <button onclick="updateKpiFromChat()" style="margin-top:8px;padding:8px 16px;background:#C9A84C;color:#1B2A4A;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">壁打ちの結論でKPIを更新する</button>
       </div>
     </div>
-    <button class="btn-save" onclick="saveSettings()">設定を保存</button>
+
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;">
+      <div style="font-size:14px;font-weight:700;color:#1B2A4A;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:2px solid #C9A84C;">KPI変更履歴</div>
+      <div id="kpi-history-list" style="font-size:12px;color:var(--text-muted);">まだ変更履歴はありません</div>
+    </div>
+
+    <!-- 最下部ナビボタン -->
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:2rem;flex-wrap:wrap;">
+      <button class="btn-action" onclick="showSectionFromProgress('masu')">9マスを確認する</button>
+      <button class="btn-action" onclick="showSectionFromProgress('plan')">事業計画書を確認する</button>
+      <button class="btn-action" onclick="showSectionFromProgress('settings')">設定</button>
+    </div>
   </section>
 </div>
-
-<!-- ===== マス編集モーダル ===== -->
 <div class="modal-overlay" id="modal">
   <div class="modal-card">
     <h3 class="modal-title" id="modal-title">マスを編集</h3>
@@ -927,8 +1025,10 @@ body::before {
     <div id="modal-chat-area" style="margin-top:1.2rem;border-top:1px solid #D4C9A8;padding-top:1rem;display:none;">
       <div style="font-size:12px;font-weight:600;color:#1B2A4A;margin-bottom:8px;">AIに改善案を相談する</div>
       <div id="modal-chat-messages" style="max-height:160px;overflow-y:auto;margin-bottom:8px;display:flex;flex-direction:column;gap:6px;"></div>
+      <!-- AI3案選択ボタンエリア -->
+      <div id="modal-suggestions" style="display:none;margin-bottom:8px;display:flex;flex-direction:column;gap:6px;"></div>
       <div style="display:flex;gap:6px;">
-        <input type="text" id="modal-chat-input" placeholder="例：もっと数値を入れた表現にしたい" style="flex:1;padding:8px 12px;border:1px solid #D4C9A8;border-radius:8px;font-size:12px;font-family:inherit;outline:none;">
+        <input type="text" id="modal-chat-input" placeholder="例：もっと数値を入れた表現にしたい" style="flex:1;padding:8px 12px;border:1px solid #D4C9A8;border-radius:8px;font-size:12px;font-family:inherit;outline:none;" onkeydown="if(event.key==='Enter')sendModalChat()">
         <button onclick="sendModalChat()" style="padding:8px 14px;background:#1B2A4A;color:white;border:none;border-radius:8px;font-size:12px;cursor:pointer;white-space:nowrap;">相談</button>
       </div>
     </div>
@@ -1250,10 +1350,10 @@ async function sendModalChat() {
   const currentValue = document.getElementById('modal-textarea').value;
   const goal = getCell(4, 4);
   const { blockIdx, cellIdx, isCenter, isLayer1, isOuterCenter } = currentModal;
-
   let cellType = isCenter ? '目標（中央）' : isLayer1 ? '第1層の戦略要素' : isOuterCenter ? '外側ブロック中央' : '第2層の具体的行動';
 
   const msgContainer = document.getElementById('modal-chat-messages');
+  const suggestContainer = document.getElementById('modal-suggestions');
 
   // 質問を表示
   const qDiv = document.createElement('div');
@@ -1264,7 +1364,7 @@ async function sendModalChat() {
 
   const prompt = `あなたは年商10億円以上の経営者を顧問する一流の経営コンサルタントです。
 
-経営者がAI9マス思考法で作成したマスの内容について、改善相談を受けています。
+経営者がAI9マス思考法で作成したマスの内容について改善案を3つ提示してください。
 
 【全体の目標】${goal}
 【会社名】${userSettings.company || '未設定'}
@@ -1273,19 +1373,42 @@ async function sendModalChat() {
 【現在の内容】${currentValue}
 【経営者の相談】${q}
 
-【回答の条件】
-- 現在の内容が最適かどうかを評価してください
-- より優れた代替案を3つ提示してください（必ず数値・具体的手段を含める）
-- 各案は20文字以内で、番号付きリスト形式で
-- 最後に「どれが最適か」の推薦と理由を1文で
-- 合計200字以内で簡潔に`;
+【出力形式】厳守：以下の形式のみで出力。余計な説明は不要。
+案1：（具体的な改善案。数値・期限・目標値を含む。7行以内）
+案2：（具体的な改善案。数値・期限・目標値を含む。7行以内）
+案3：（具体的な改善案。数値・期限・目標値を含む。7行以内）`;
 
   try {
     const answer = await callGemini(prompt);
-    const aDiv = document.createElement('div');
-    aDiv.style.cssText = 'background:#F0F7F0;border:1px solid #2E7D52;border-radius:8px;padding:8px 10px;font-size:11px;color:#1B2A4A;line-height:1.7;white-space:pre-wrap;';
-    aDiv.textContent = answer;
-    msgContainer.appendChild(aDiv);
+
+    // 3案をパース
+    const matches = [...answer.matchAll(/案(\d+)[:：]\s*([^\n案]+(?:\n(?!案\d).*)*)/g)];
+
+    if (matches.length >= 2) {
+      // 3案ボタンを表示
+      suggestContainer.style.display = 'flex';
+      suggestContainer.innerHTML = '';
+
+      matches.forEach((m, i) => {
+        const caseText = m[2].trim();
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'background:#F0F7F0;border:1px solid #2E7D52;border-radius:8px;padding:8px 10px;font-size:11px;color:#1B2A4A;line-height:1.6;';
+        wrapper.innerHTML = `
+          <div style="font-weight:700;color:#2E7D52;margin-bottom:4px;">案${i+1}</div>
+          <div style="white-space:pre-wrap;margin-bottom:8px;">${caseText}</div>
+          <button onclick="selectModalSuggestion(${JSON.stringify(caseText)})"
+            style="padding:5px 12px;background:#1B2A4A;color:white;border:none;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;">
+            ${i+1}案を選ぶ
+          </button>`;
+        suggestContainer.appendChild(wrapper);
+      });
+    } else {
+      // パースできない場合はテキストで表示
+      const aDiv = document.createElement('div');
+      aDiv.style.cssText = 'background:#F0F7F0;border:1px solid #2E7D52;border-radius:8px;padding:8px 10px;font-size:11px;color:#1B2A4A;line-height:1.7;white-space:pre-wrap;';
+      aDiv.textContent = answer;
+      msgContainer.appendChild(aDiv);
+    }
     msgContainer.scrollTop = msgContainer.scrollHeight;
   } catch(e) {
     const eDiv = document.createElement('div');
@@ -1293,6 +1416,13 @@ async function sendModalChat() {
     eDiv.textContent = 'エラー：' + e.message;
     msgContainer.appendChild(eDiv);
   }
+}
+
+function selectModalSuggestion(text) {
+  document.getElementById('modal-textarea').value = text;
+  document.getElementById('modal-suggestions').style.display = 'none';
+  document.getElementById('modal-suggestions').innerHTML = '';
+  showToast('テキストエリアに入力しました。編集後「保存する」を押してください。', 'info');
 }
 
 // ===== AI生成 =====
@@ -1441,11 +1571,15 @@ ${commonConditions}`;
 
     outerBlocks.forEach((blockIdx, i) => {
       const raw = blocks[i] || '';
-      const line = raw.replace(/^要素\d+[:：]?\s*/,'').replace(/\n/g,'');
-      const parts = line.split('|').map(p => p.trim());
-      if (parts.length !== 8) return;
+      // 「要素N：」「要素N:」などのプレフィックスを全て除去
+      const cleaned = raw
+        .replace(/^要素\d+[\s\S]*?[:：]\s*/,'')
+        .replace(/\n/g,'')
+        .trim();
+      const parts = cleaned.split('|').map(p => p.trim()).filter(p => p);
+      if (parts.length < 8) return;
       CLOCK_ORDER.forEach((cellIdx, j) => {
-        setCell(blockIdx, cellIdx, parts[j]);
+        setCell(blockIdx, cellIdx, parts[j] || '');
       });
     });
 
@@ -1502,35 +1636,48 @@ function addChatMsg(text, type) {
   container.scrollTop = container.scrollHeight;
 }
 
+// ===== 追加情報保存 =====
+async function saveExtraSettings() {
+  if (!currentUser) return;
+  userSettings.market     = document.getElementById('s-market').value;
+  userSettings.competitor = document.getElementById('s-competitor').value;
+  userSettings.current    = document.getElementById('s-current').value;
+  userSettings.products   = document.getElementById('s-products').value;
+  userSettings.finance    = document.getElementById('s-finance').value;
+
+  const data = {
+    email: currentUser.email,
+    company: document.getElementById('s-company').value,
+    name: document.getElementById('s-name').value,
+    industry: document.getElementById('s-industry').value,
+    gemini_api_key: document.getElementById('s-apikey').value
+  };
+  const { data: existing } = await sb.from('users').select('id').eq('email', currentUser.email).single();
+  if (existing) {
+    await sb.from('users').update(data).eq('email', currentUser.email);
+  } else {
+    await sb.from('users').insert({ ...data, id: currentUser.id });
+  }
+  showToast('追加情報を保存しました', 'success');
+}
+
 // ===== 9マスデータ保存 =====
 async function saveMasuData() {
   if (!currentUser) return;
-
   const goal = getCell(4, 4);
   const outerBlocks = [0,1,2,3,5,6,7,8];
-
   const layer1 = CLOCK_ORDER.map(cellIdx => getCell(4, cellIdx));
   const layer2 = {};
   outerBlocks.forEach(blockIdx => {
     layer2[blockIdx] = CLOCK_ORDER.map(cellIdx => getCell(blockIdx, cellIdx));
   });
-
   const { data: existing } = await sb.from('masu_data').select('id').eq('user_id', currentUser.id).single();
-
-  const payload = {
-    user_id: currentUser.id,
-    goal,
-    layer1,
-    layer2,
-    updated_at: new Date().toISOString()
-  };
-
+  const payload = { user_id: currentUser.id, goal, layer1, layer2, updated_at: new Date().toISOString() };
   if (existing) {
     await sb.from('masu_data').update(payload).eq('user_id', currentUser.id);
   } else {
     await sb.from('masu_data').insert(payload);
   }
-
   showToast('9マスデータを保存しました', 'success');
 }
 
@@ -1538,33 +1685,54 @@ async function saveMasuData() {
 async function generatePlan() {
   const goal = getCell(4, 4);
   const elements = CLOCK_ORDER.map(cellIdx => getCell(4, cellIdx)).filter(v => v);
+  if (!goal || elements.length === 0) { showToast('先に9マスを生成してください', 'error'); return; }
 
-  if (!goal || elements.length === 0) {
-    showToast('先に9マスを生成してください', 'error');
-    return;
-  }
+  const outerBlocks = [0,1,2,3,5,6,7,8];
+  const actionPlans = outerBlocks.map((blockIdx, i) => {
+    const actions = CLOCK_ORDER.map(cellIdx => getCell(blockIdx, cellIdx)).filter(v => v);
+    return `【${elements[i] || '要素'+(i+1)}】\n${actions.map((a,j) => `  ${j+1}. ${a}`).join('\n')}`;
+  }).join('\n\n');
 
-  showToast('AIが事業計画書を生成中...', 'info');
+  showToast('AIが事業計画書を生成中（30〜60秒）...', 'info');
 
-  const prompt = `あなたは年商10億円以上の経営者を顧問する一流の経営コンサルタントです。以下の情報から、投資家・金融機関に提出できるレベルの事業計画書・KGI・KPIを作成してください。
+  const prompt = `あなたは経営コンサルタントと公認会計士の両方の知識を持つ専門家です。
+以下の情報から、銀行融資審査に通り、経営者が感動し、従業員がAIを導入する動機になる事業計画書を作成してください。
 
-会社名：${userSettings.company || '未設定'}　業種：${userSettings.industry || '未設定'}
+【基本情報】
+会社名：${userSettings.company || '未設定'}
+業種：${userSettings.industry || '未設定'}
+氏名：${userSettings.name || '未設定'}
 最終目標：${goal}
-9マスの戦略要素（重要な順）：${elements.join('、')}
+現在の状況：${userSettings.current || '設定画面で入力してください'}
+主力商品・単価：${userSettings.products || '設定画面で入力してください'}
+市場規模・成長率：${userSettings.market || '設定画面で入力してください'}
+競合・自社の強み：${userSettings.competitor || '設定画面で入力してください'}
+資金調達状況：${userSettings.finance || '未入力'}
 
-【厳守条件】
-- 全ての数値は具体的な根拠ある数字を使う（「増加」ではなく「月15%増」）
-- KGIは年間・半年・四半期の3段階で設定
-- KPIは週次・月次・四半期に分けて設定し、必ず担当役職を明記
-- 戦略は「誰が・何を・いつまでに・どのくらい」の形式で記述
+【9マスの戦略要素（重要な順）】
+${elements.map((e,i) => `${i+1}. ${e}`).join('\n')}
 
-【出力形式】厳守
+【9マスの行動計画（外側72マス）】
+${actionPlans}
+
+【出力形式】厳守。各セクションを=セクション名=で区切る。
 
 =VISION=
-（3年後の具体的な姿を2文で。数値を必ず含める）
+3年後の具体的な姿を情熱的かつ数値で描く（3〜5文）。経営者が読んでワクワクする表現で。
+
+=MARKET=
+市場規模：（具体的な数値と根拠）
+成長率：（年率〇〇%の根拠）
+自社のポジション：（なぜ自社が勝てるか）
+競合との差別化：（具体的な優位性3点）
+
+=SALES_PLAN=
+（商品・サービス名）|（単価）|（1年目月販売数）|（2年目月販売数）|（3年目月販売数）|（3年目年間売上）
+（商品・サービス名）|（単価）|（1年目月販売数）|（2年目月販売数）|（3年目月販売数）|（3年目年間売上）
+（商品・サービス名）|（単価）|（1年目月販売数）|（2年目月販売数）|（3年目月販売数）|（3年目年間売上）
 
 =STRATEGIES=
-戦略1：（9マスの要素を「誰が・何を・いつまでに・数値目標」の形式で記述）
+戦略1：（誰が・何のAIツールを使って・何を・いつまでに・どれだけ達成するか）
 戦略2：
 戦略3：
 戦略4：
@@ -1573,37 +1741,91 @@ async function generatePlan() {
 戦略7：
 戦略8：
 
+=AI_PLAN=
+（業務名）|（使用AIツール）|（担当者）|（削減時間または売上貢献）|（導入期限）
+（業務名）|（使用AIツール）|（担当者）|（削減時間または売上貢献）|（導入期限）
+（業務名）|（使用AIツール）|（担当者）|（削減時間または売上貢献）|（導入期限）
+（業務名）|（使用AIツール）|（担当者）|（削減時間または売上貢献）|（導入期限）
+（業務名）|（使用AIツール）|（担当者）|（削減時間または売上貢献）|（導入期限）
+
 =KGI=
-（KGI項目名）|（具体的な目標数値・単位付き）|（達成期限）
-（KGI項目名）|（具体的な目標数値・単位付き）|（達成期限）
-（KGI項目名）|（具体的な目標数値・単位付き）|（達成期限）
+（KGI項目名）|（1年目目標）|（2年目目標）|（3年目目標）|（計測方法）
+（KGI項目名）|（1年目目標）|（2年目目標）|（3年目目標）|（計測方法）
+（KGI項目名）|（1年目目標）|（2年目目標）|（3年目目標）|（計測方法）
+（KGI項目名）|（1年目目標）|（2年目目標）|（3年目目標）|（計測方法）
+（KGI項目名）|（1年目目標）|（2年目目標）|（3年目目標）|（計測方法）
 
 =KPI=
-（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）
-（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）
-（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）
-（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）
-（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）
-（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）
-（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）
-（KPI項目名）|（目標数値・単位付き）|（週次/月次/四半期）|（担当者役職）`;
+（KPI項目名）|（目標数値）|（計測頻度）|（担当役職）|（改善アクション）
+（KPI項目名）|（目標数値）|（計測頻度）|（担当役職）|（改善アクション）
+（KPI項目名）|（目標数値）|（計測頻度）|（担当役職）|（改善アクション）
+（KPI項目名）|（目標数値）|（計測頻度）|（担当役職）|（改善アクション）
+（KPI項目名）|（目標数値）|（計測頻度）|（担当役職）|（改善アクション）
+（KPI項目名）|（目標数値）|（計測頻度）|（担当役職）|（改善アクション）
+（KPI項目名）|（目標数値）|（計測頻度）|（担当役職）|（改善アクション）
+（KPI項目名）|（目標数値）|（計測頻度）|（担当役職）|（改善アクション）
+
+=FINANCE=
+売上高|（現状値）|（1年目）|（2年目）|（3年目）
+売上原価|（現状値）|（1年目）|（2年目）|（3年目）
+粗利益|（現状値）|（1年目）|（2年目）|（3年目）
+営業利益|（現状値）|（1年目）|（2年目）|（3年目）
+営業利益率|（現状値）|（1年目）|（2年目）|（3年目）
+人件費|（現状値）|（1年目）|（2年目）|（3年目）
+従業員数|（現状値）|（1年目）|（2年目）|（3年目）`;
 
   try {
     const result = await callGemini(prompt);
-
     const vision     = extractSection(result, 'VISION');
+    const market     = extractSection(result, 'MARKET');
+    const salesLines = extractSection(result, 'SALES_PLAN').split('\n').filter(l => l.includes('|'));
     const strategies = extractSection(result, 'STRATEGIES').split('\n').filter(s => s.trim());
+    const aiLines    = extractSection(result, 'AI_PLAN').split('\n').filter(l => l.includes('|'));
     const kgiLines   = extractSection(result, 'KGI').split('\n').filter(l => l.includes('|'));
     const kpiLines   = extractSection(result, 'KPI').split('\n').filter(l => l.includes('|'));
+    const finLines   = extractSection(result, 'FINANCE').split('\n').filter(l => l.includes('|'));
 
+    document.getElementById('plan-company').textContent = userSettings.company || '';
+    document.getElementById('plan-industry').textContent = userSettings.industry || '';
     document.getElementById('plan-vision').textContent = vision;
     document.getElementById('plan-goal').textContent = goal;
+
+    const planGrid = document.querySelector('.plan-grid');
+
+    // 市場分析カード
+    let marketCard = document.getElementById('plan-market-card');
+    if (!marketCard) { marketCard = document.createElement('div'); marketCard.id = 'plan-market-card'; marketCard.className = 'plan-card'; marketCard.style.gridColumn = '1 / -1'; planGrid.insertBefore(marketCard, planGrid.children[1]); }
+    marketCard.innerHTML = `<div class="plan-card-title">市場分析・競合優位性</div><div class="plan-field-value" contenteditable="true" style="white-space:pre-wrap;min-height:80px;">${market}</div>`;
+
+    // 販売計画カード
+    let salesCard = document.getElementById('plan-sales-card');
+    if (!salesCard) { salesCard = document.createElement('div'); salesCard.id = 'plan-sales-card'; salesCard.className = 'plan-card'; salesCard.style.gridColumn = '1 / -1'; planGrid.insertBefore(salesCard, planGrid.children[2]); }
+    let salesHTML = `<div class="plan-card-title">販売計画（商品別・年次）</div><div style="overflow-x:auto;"><table class="kgi-table"><thead><tr><th>商品・サービス</th><th>単価</th><th>1年目/月</th><th>2年目/月</th><th>3年目/月</th><th>3年目年間</th></tr></thead><tbody>`;
+    salesLines.slice(0,5).forEach(line => { const p = line.split('|').map(v => v.trim()); if (p.length >= 6) salesHTML += `<tr>${p.slice(0,6).map(v => `<td>${v}</td>`).join('')}</tr>`; });
+    salesHTML += '</tbody></table></div>';
+    salesCard.innerHTML = salesHTML;
+
+    // AI活用計画カード
+    let aiCard = document.getElementById('plan-ai-card');
+    if (!aiCard) { aiCard = document.createElement('div'); aiCard.id = 'plan-ai-card'; aiCard.className = 'plan-card'; aiCard.style.gridColumn = '1 / -1'; planGrid.appendChild(aiCard); }
+    let aiHTML = `<div class="plan-card-title">AI活用行動計画（従業員がAIを使う具体的計画）</div><div style="overflow-x:auto;"><table class="kgi-table"><thead><tr><th>業務</th><th>使用AIツール</th><th>担当者</th><th>効果</th><th>導入期限</th></tr></thead><tbody>`;
+    aiLines.slice(0,8).forEach(line => { const p = line.split('|').map(v => v.trim()); if (p.length >= 5) aiHTML += `<tr>${p.slice(0,5).map(v => `<td>${v}</td>`).join('')}</tr>`; });
+    aiHTML += '</tbody></table></div>';
+    aiCard.innerHTML = aiHTML;
+
+    // 財務計画カード
+    let finCard = document.getElementById('plan-fin-card');
+    if (!finCard) { finCard = document.createElement('div'); finCard.id = 'plan-fin-card'; finCard.className = 'plan-card'; finCard.style.gridColumn = '1 / -1'; planGrid.appendChild(finCard); }
+    let finHTML = `<div class="plan-card-title">財務計画（3ヶ年）</div><div style="overflow-x:auto;"><table class="kgi-table"><thead><tr><th>項目</th><th>現状</th><th>1年目</th><th>2年目</th><th>3年目</th></tr></thead><tbody>`;
+    finLines.forEach(line => { const p = line.split('|').map(v => v.trim()); if (p.length >= 5) finHTML += `<tr>${p.slice(0,5).map(v => `<td>${v}</td>`).join('')}</tr>`; });
+    finHTML += '</tbody></table></div>';
+    finCard.innerHTML = finHTML;
 
     // 戦略
     const stratDiv = document.getElementById('plan-strategies');
     stratDiv.innerHTML = '';
-    strategies.slice(0, 8).forEach((st, i) => {
-      const text = st.replace(/^戦略\d+[:：]?\s*/, '').trim();
+    strategies.slice(0,8).forEach((st,i) => {
+      const text = st.replace(/^戦略\d+[:：]?\s*/,'').trim();
       if (!text) return;
       const div = document.createElement('div');
       div.className = 'plan-field';
@@ -1614,18 +1836,18 @@ async function generatePlan() {
     // KGI
     const kgiTbody = document.getElementById('kgi-tbody');
     kgiTbody.innerHTML = '';
-    kgiLines.slice(0, 3).forEach(line => {
+    kgiLines.slice(0,5).forEach(line => {
       const p = line.split('|').map(v => v.trim());
-      if (p.length < 3) return;
+      if (p.length < 4) return;
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${p[0]}</td><td>${p[1]}</td><td>${p[2]}</td><td><div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div></td>`;
+      tr.innerHTML = `<td>${p[0]}</td><td>${p[1]}</td><td>${p[2]}</td><td>${p[3]}</td>`;
       kgiTbody.appendChild(tr);
     });
 
     // KPI
     const kpiTbody = document.getElementById('kpi-tbody');
     kpiTbody.innerHTML = '';
-    kpiLines.slice(0, 8).forEach(line => {
+    kpiLines.slice(0,8).forEach(line => {
       const p = line.split('|').map(v => v.trim());
       if (p.length < 4) return;
       const tr = document.createElement('tr');
@@ -1633,7 +1855,7 @@ async function generatePlan() {
       kpiTbody.appendChild(tr);
     });
 
-    showToast('事業計画書を生成しました！', 'success');
+    showToast('事業計画書を生成しました！内容を確認・編集してください。', 'success');
   } catch(e) {
     showToast('エラー：' + e.message, 'error');
   }
@@ -1684,6 +1906,243 @@ function showSection(name) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('section-' + name).classList.add('active');
   event.target.classList.add('active');
+  if (name === 'progress') loadKpiProgress();
+}
+
+// ===== KPIをKPI管理画面に取り込む =====
+function sendKpiToProgress() {
+  const kpiTbody = document.getElementById('kpi-tbody');
+  if (!kpiTbody || kpiTbody.rows.length === 0) {
+    showToast('先に事業計画書のKPIを生成してください', 'error');
+    return;
+  }
+  kpiItems = [];
+  Array.from(kpiTbody.rows).forEach((row, i) => {
+    const cells = row.cells;
+    if (cells.length >= 4) {
+      kpiItems.push({
+        id: i,
+        name: cells[0].textContent,
+        target: cells[1].textContent,
+        frequency: cells[2].textContent,
+        owner: cells[3].textContent,
+        aiTool: cells[4] ? cells[4].textContent : '',
+        aiContent: cells[5] ? cells[5].textContent : '',
+        actual: ''
+      });
+    }
+  });
+  showToast('KPIをKPI管理画面に登録しました', 'success');
+  // 進捗タブに移動
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-progress').classList.add('active');
+  document.querySelectorAll('.nav-btn')[2].classList.add('active');
+  renderKpiProgress();
+}
+
+// KPI管理画面から他の画面に移動
+function showSectionFromProgress(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  const navMap = { masu: 0, plan: 1, progress: 2, settings: 3 };
+  if (navMap[name] !== undefined) {
+    document.querySelectorAll('.nav-btn')[navMap[name]].classList.add('active');
+  }
+}
+async function saveKgiSettings() {
+  userSettings.kgi = [
+    { name: document.getElementById('kgi1-name').value, value: document.getElementById('kgi1-value').value, deadline: document.getElementById('kgi1-deadline').value },
+    { name: document.getElementById('kgi2-name').value, value: document.getElementById('kgi2-value').value, deadline: document.getElementById('kgi2-deadline').value },
+    { name: document.getElementById('kgi3-name').value, value: document.getElementById('kgi3-value').value, deadline: document.getElementById('kgi3-deadline').value },
+  ].filter(k => k.name);
+  showToast('KGIを保存しました', 'success');
+}
+
+// ===== KPI進捗管理 =====
+let kpiItems = [];
+let kpiHistory = [];
+let kpiSuggestion = null;
+
+function loadKpiProgress() {
+  const kpiTbody = document.getElementById('kpi-tbody');
+  if (!kpiTbody) return;
+  const prev = kpiItems.slice();
+  kpiItems = [];
+  Array.from(kpiTbody.rows).forEach((row, i) => {
+    const cells = row.cells;
+    if (cells.length >= 4) {
+      kpiItems.push({
+        id: i,
+        name: cells[0].textContent,
+        target: cells[1].textContent,
+        frequency: cells[2].textContent,
+        owner: cells[3].textContent,
+        aiTool: cells[4] ? cells[4].textContent : '',
+        actual: prev[i] ? prev[i].actual : ''
+      });
+    }
+  });
+  renderKpiProgress();
+}
+
+function renderKpiProgress() {
+  const container = document.getElementById('kpi-progress-list');
+  if (!container) return;
+  if (kpiItems.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--text-muted);font-size:14px;">先に「事業計画書」タブでKPIを生成してください</div>';
+    return;
+  }
+  container.innerHTML = kpiItems.map((kpi, i) => {
+    const actual = parseFloat(kpi.actual) || 0;
+    const target = parseFloat(kpi.target.replace(/[^0-9.]/g, '')) || 1;
+    const pct = Math.min(Math.round((actual / target) * 100), 100);
+    const barColor = pct >= 80 ? '#2E7D52' : pct >= 50 ? '#C9A84C' : '#C0392B';
+    return `
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#1B2A4A;">${kpi.name}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">目標：${kpi.target}　${kpi.frequency}　担当：${kpi.owner}</div>
+          ${kpi.aiTool ? `<div style="font-size:11px;color:#2E7D52;margin-top:2px;">AI：${kpi.aiTool}</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" value="${kpi.actual}" placeholder="実績入力"
+            style="width:110px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;text-align:right;"
+            onchange="updateKpiActual(${i}, this.value)">
+        </div>
+      </div>
+      <div style="background:#EDE9DF;border-radius:4px;height:6px;overflow:hidden;">
+        <div style="height:100%;background:${barColor};width:${pct}%;border-radius:4px;transition:width 0.5s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px;">
+        <span style="font-size:11px;color:var(--text-muted);">0</span>
+        <span style="font-size:12px;font-weight:600;color:${barColor};">${pct}%達成</span>
+        <span style="font-size:11px;color:var(--text-muted);">目標：${kpi.target}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateKpiActual(idx, value) {
+  kpiItems[idx].actual = value;
+  renderKpiProgress();
+  const filledCount = kpiItems.filter(k => k.actual !== '').length;
+  if (filledCount >= 3) analyzeKpiProgress();
+}
+
+async function analyzeKpiProgress() {
+  const goal = getCell(4, 4);
+  const kpiSummary = kpiItems.map(k => {
+    if (!k.actual) return null;
+    const target = parseFloat(k.target.replace(/[^0-9.]/g, '')) || 1;
+    const actual = parseFloat(k.actual) || 0;
+    const pct = Math.round((actual / target) * 100);
+    return `${k.name}：目標${k.target}に対して実績${k.actual}（達成率${pct}%）`;
+  }).filter(Boolean).join('\n');
+
+  const prompt = `あなたは経営コンサルタントです。以下のKPI進捗データを分析して修正提案があれば提示してください。
+
+会社名：${userSettings.company || '未設定'}
+業種：${userSettings.industry || '未設定'}
+最終目標：${goal}
+KPI進捗：
+${kpiSummary}
+
+【分析条件】
+- 達成率50%未満のKPIは修正が必要か判断する
+- 問題ない場合は「現在のKPIは適切です」と返す
+- 修正提案は「現在の目標値→推奨目標値：理由」の形式で
+- 経営者の自尊心を尊重した前向きな言い方で
+- 200字以内`;
+
+  try {
+    const result = await callGemini(prompt);
+    if (result.includes('適切') && !result.includes('修正')) return;
+    kpiSuggestion = result;
+    document.getElementById('kpi-ai-suggestion').textContent = result;
+    document.getElementById('kpi-ai-area').style.display = 'block';
+  } catch(e) { console.error(e); }
+}
+
+function acceptKpiSuggestion() {
+  if (!kpiSuggestion) return;
+  const now = new Date().toLocaleDateString('ja-JP');
+  kpiHistory.unshift({ date: now, type: 'AI提案を採用', content: kpiSuggestion });
+  renderKpiHistory();
+  document.getElementById('kpi-ai-area').style.display = 'none';
+  showToast('KPIを更新しました', 'success');
+  kpiSuggestion = null;
+}
+
+function rejectKpiSuggestion() {
+  document.getElementById('kpi-ai-area').style.display = 'none';
+  kpiSuggestion = null;
+}
+
+async function sendKpiChat() {
+  const q = document.getElementById('kpi-chat-input').value.trim();
+  if (!q) return;
+  const goal = getCell(4, 4);
+  const kpiSummary = kpiItems.map(k => `${k.name}：目標${k.target}、実績${k.actual || '未入力'}`).join('\n');
+  addKpiChatMsg(q, 'question');
+  document.getElementById('kpi-chat-input').value = '';
+
+  const prompt = `あなたは経営コンサルタントです。経営者がKPIについて意見を述べています。一緒に最適なKPIを考えてください。
+
+最終目標：${goal}
+現在のKPI：
+${kpiSummary}
+AIの提案：${kpiSuggestion || 'なし'}
+経営者の意見：${q}
+
+【回答条件】
+- 経営者の意見を尊重して対話する
+- 押しつけず一緒に考える姿勢で
+- 具体的な数値案を提示する場合は根拠も添える
+- 200字以内で簡潔に`;
+
+  try {
+    const answer = await callGemini(prompt);
+    addKpiChatMsg(answer, 'answer');
+  } catch(e) { addKpiChatMsg('エラーが発生しました', 'answer'); }
+}
+
+function addKpiChatMsg(text, type) {
+  const container = document.getElementById('kpi-chat-messages');
+  const div = document.createElement('div');
+  div.style.cssText = type === 'question'
+    ? 'background:#EBF0FA;border:1px solid #1B2A4A;border-radius:8px;padding:8px 10px;font-size:12px;color:#1B2A4A;align-self:flex-end;max-width:85%;'
+    : 'background:#F0F7F0;border:1px solid #2E7D52;border-radius:8px;padding:8px 10px;font-size:12px;color:#1B2A4A;line-height:1.7;white-space:pre-wrap;';
+  div.textContent = text;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function updateKpiFromChat() {
+  const messages = document.getElementById('kpi-chat-messages');
+  const allDivs = messages.querySelectorAll('div');
+  let lastAnswer = '';
+  allDivs.forEach(d => { if (d.style.background.includes('F0F7F0')) lastAnswer = d.textContent; });
+  if (!lastAnswer) return;
+  const now = new Date().toLocaleDateString('ja-JP');
+  kpiHistory.unshift({ date: now, type: '壁打ちで自分で決定', content: lastAnswer });
+  renderKpiHistory();
+  document.getElementById('kpi-ai-area').style.display = 'none';
+  showToast('壁打ちの結論でKPIを更新しました！', 'success');
+}
+
+function renderKpiHistory() {
+  const container = document.getElementById('kpi-history-list');
+  if (!container) return;
+  if (kpiHistory.length === 0) { container.textContent = 'まだ変更履歴はありません'; return; }
+  container.innerHTML = kpiHistory.map(h => `
+    <div style="padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:12px;font-weight:600;color:#1B2A4A;">${h.date}　${h.type}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:2px;line-height:1.6;">${h.content}</div>
+    </div>
+  `).join('');
 }
 
 // ===== トースト =====
