@@ -1925,6 +1925,7 @@ ${actionPlans}
     const planJson = await planRes.json();
     if (planJson.error) throw new Error(planJson.error.message);
     const result = planJson.candidates[0].content.parts[0].text.trim();
+    console.log('Gemini返答全文:', result);
     const vision     = extractSection(result, 'VISION');
     const market     = extractSection(result, 'MARKET');
     const salesLines = extractSection(result, 'SALES_PLAN').split('\n').filter(l => l.includes('|'));
