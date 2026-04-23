@@ -1928,13 +1928,13 @@ ${actionPlans}
     console.log('Gemini返答全文:', result);
     const vision     = extractSection(result, 'VISION');
     const market     = extractSection(result, 'MARKET');
-    const salesLines = extractSection(result, 'SALES_PLAN').split('\n').filter(l => l.includes('|'));
+    const salesLines = extractSection(result, 'SALES_PLAN').split('\n')
     const strategies = extractSection(result, 'STRATEGIES').split('\n').filter(s => s.trim());
-    const aiLines    = extractSection(result, 'AI_PLAN').split('\n').filter(l => l.includes('|'));
-    const kgiLines   = extractSection(result, 'KGI').split('\n').filter(l => l.includes('|'));
-    const kpiLines   = extractSection(result, 'KPI').split('\n').filter(l => l.includes('|'));
-    const finLines   = extractSection(result, 'FINANCE').split('\n').filter(l => l.includes('|'));
-    const roiLines   = extractSection(result, 'ROI').split('\n').filter(l => l.includes('|'));
+    const aiLines    = extractSection(result, 'AI_PLAN').split('\n').filter(l => l.includes('|') && !l.trim().startsWith('---') && l.replace(/\|/g,'').trim().length > 0)
+    const kgiLines   = extractSection(result, 'KGI').split('\n').filter(l => l.includes('|') && !l.trim().startsWith('---') && l.replace(/\|/g,'').trim().length > 0)
+    const kpiLines   = extractSection(result, 'KPI').split('\n').filter(l => l.includes('|') && !l.trim().startsWith('---') && l.replace(/\|/g,'').trim().length > 0)
+    const finLines   = extractSection(result, 'FINANCE').split('\n').filter(l => l.includes('|') && !l.trim().startsWith('---') && l.replace(/\|/g,'').trim().length > 0)
+    const roiLines   = extractSection(result, 'ROI').split('\n').filter(l => l.includes('|') && !l.trim().startsWith('---') && l.replace(/\|/g,'').trim().length > 0)
 
     document.getElementById('plan-company').textContent = userSettings.company || '';
     document.getElementById('plan-industry').textContent = userSettings.industry || '';
